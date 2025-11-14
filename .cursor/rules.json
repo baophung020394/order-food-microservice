@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "context": {
+    "always_include": ["docs/project_brief.md", "docs/project_microservices_setup.md"]
+  },
+  "rules": [
+    {
+      "description": "Always include project brief and requirements so the AI understands the project goals and constraints.",
+      "applies_to": "all"
+    }
+  ]
+}

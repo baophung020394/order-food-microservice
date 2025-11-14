@@ -32,23 +32,29 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   }> {
+    console.log('[AuthService] Starting register process...');
     const { username, password, fullName, role } = registerDto;
 
     // Check if user already exists
+    console.log('[AuthService] Checking if user exists:', username);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const existingUser: User | null = await this.userRepository.findOne({
       where: { username },
     });
+    console.log('[AuthService] User exists check completed');
 
     if (existingUser) {
       throw new ConflictException('Username already exists');
     }
 
     // Hash password
+    console.log('[AuthService] Hashing password...');
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const passwordHash = await bcrypt.hash(password, 10);
+    console.log('[AuthService] Password hashed');
 
     // Create user
+    console.log('[AuthService] Creating user entity...');
     const user = this.userRepository.create({
       username,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -58,12 +64,17 @@ export class AuthService {
       isActive: true,
     });
 
+    console.log('[AuthService] Saving user to database...');
     const savedUser = await this.userRepository.save(user);
+    console.log('[AuthService] User saved successfully:', savedUser.id);
 
     // Generate tokens
+    console.log('[AuthService] Generating tokens...');
     const tokens = await this.generateTokens(savedUser);
+    console.log('[AuthService] Tokens generated');
 
     // Emit user.created event to Redis
+    console.log('[AuthService] Publishing user.created event to Redis...');
     await this.redis.publish(
       'user.created',
       JSON.stringify({
@@ -72,6 +83,7 @@ export class AuthService {
         role: savedUser.role,
       }),
     );
+    console.log('[AuthService] Event published to Redis');
 
     // Remove password hash from response
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

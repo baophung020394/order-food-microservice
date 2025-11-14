@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
+// JwtModule is now global in AppModule, no need to import here
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from './entities/user.entity';
@@ -13,7 +13,7 @@ import { RedisModule } from '../config/redis.config';
   imports: [
     TypeOrmModule.forFeature([User, RefreshToken]),
     PassportModule,
-    JwtModule,
+    // JwtModule is global, no need to import
     RedisModule,
   ],
   controllers: [AuthController],

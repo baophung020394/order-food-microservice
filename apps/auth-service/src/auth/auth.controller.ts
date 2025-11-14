@@ -29,7 +29,22 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
+    console.log('[AuthController] Received register request:', {
+      username: registerDto.username,
+      fullName: registerDto.fullName,
+      role: registerDto.role,
+    });
+    try {
+      const result = await this.authService.register(registerDto);
+      console.log(
+        '[AuthController] Register successful for user:',
+        registerDto.username,
+      );
+      return result;
+    } catch (error) {
+      console.error('[AuthController] Register error:', error);
+      throw error;
+    }
   }
 
   @Post('login')
