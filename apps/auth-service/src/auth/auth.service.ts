@@ -202,6 +202,44 @@ export class AuthService {
     );
   }
 
+  async logout(
+    userId: string,
+    refreshToken?: string,
+  ): Promise<{ message: string }> {
+    // If refreshToken is provided, logout only that specific token
+    // Otherwise, logout all refresh tokens for the user (logout from all devices)
+    if (refreshToken) {
+      const token = await this.refreshTokenRepository.findOne({
+        where: {
+          userId,
+          token: refreshToken,
+        },
+      });
+
+      if (token) {
+        await this.refreshTokenRepository.remove(token);
+        console.log(
+          `[AuthService] Logged out refresh token for user: ${userId}`,
+        );
+        return { message: 'Logged out successfully' };
+      }
+    } else {
+      // Delete all refresh tokens for the user
+      const tokens = await this.refreshTokenRepository.find({
+        where: { userId },
+      });
+
+      if (tokens.length > 0) {
+        await this.refreshTokenRepository.remove(tokens);
+        console.log(
+          `[AuthService] Logged out all devices for user: ${userId} (${tokens.length} tokens removed)`,
+        );
+      }
+    }
+
+    return { message: 'Logged out successfully' };
+  }
+
   private async generateTokens(
     user: User,
   ): Promise<{ accessToken: string; refreshToken: string }> {

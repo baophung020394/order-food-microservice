@@ -69,4 +69,13 @@ export class AuthController {
   async getAllUsers(@Request() req: AuthenticatedRequest) {
     return this.authService.getAllUsers(req.user.role);
   }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(
+    @Request() req: AuthenticatedRequest,
+    @Body('refreshToken') refreshToken?: string,
+  ) {
+    return this.authService.logout(req.user.sub, refreshToken);
+  }
 }

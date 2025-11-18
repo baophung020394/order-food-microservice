@@ -694,7 +694,57 @@ curl -X GET http://localhost:3000/api/v1/auth/profile \
 
 ---
 
-#### 5. List All Users (Admin Only)
+#### 5. Logout
+
+**Endpoint:** `POST /api/v1/auth/logout`  
+**Description:** Logout user and invalidate refresh token(s)  
+**Authentication:** Required (Bearer Token)
+
+**Headers:**
+
+```
+Authorization: Bearer <access_token>
+```
+
+**Request Body (Optional):**
+
+```json
+{
+  "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+**Note:** 
+- If `refreshToken` is provided, only that specific token will be invalidated (logout from one device)
+- If `refreshToken` is not provided, all refresh tokens for the user will be invalidated (logout from all devices)
+
+**Response:**
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+**Example:**
+
+```bash
+# Logout from all devices
+curl -X POST http://localhost:3000/api/v1/auth/logout \
+  -H "Authorization: Bearer your-access-token-here"
+
+# Logout from specific device
+curl -X POST http://localhost:3000/api/v1/auth/logout \
+  -H "Authorization: Bearer your-access-token-here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "your-refresh-token-here"
+  }'
+```
+
+---
+
+#### 6. List All Users (Admin Only)
 
 **Endpoint:** `GET /api/v1/auth/users`  
 **Description:** Get list of all users (Admin role required)  
