@@ -257,7 +257,7 @@ export class AuthService {
       type: 'refresh',
     };
     const refreshToken = this.jwtService.sign(refreshTokenPayload, {
-      expiresIn: '7d',
+      expiresIn: '30s',
     });
 
     // Save refresh token to database
