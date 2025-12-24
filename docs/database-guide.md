@@ -28,7 +28,7 @@
 │  Volume: postgres-auth-data             │
 │  ✅ Auth Service ghi data vào đây       │
 └─────────────────────────────────────────┘
-              ↕ Port 5433
+              ↕ Port 5433  
 ┌─────────────────────────────────────────┐
 │  Your Local Machine                     │
 │  DBeaver connects to:                  │

@@ -14,6 +14,7 @@
     "start:prod": "node dist/apps/api-gateway/main",
     "start:dev:gateway": "nest start api-gateway --watch",
     "start:dev:auth": "nest start auth-service --watch",
+    "start:dev:table": "nest start table-service --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -25,8 +26,11 @@
     "docker:logs": "docker-compose logs -f",
     "docker:logs:gateway": "docker-compose logs -f api-gateway",
     "docker:logs:auth": "docker-compose logs -f auth-service",
+    "docker:logs:table": "docker-compose logs -f table-service",
     "docker:logs:postgres": "docker-compose logs -f postgres-auth",
-    "docker:logs:redis": "docker-compose logs -f redis"
+    "docker:logs:redis": "docker-compose logs -f redis",
+    "migration:table:run": "ts-node -r tsconfig-paths/register apps/table-service/src/migrations/run-migration.ts",
+    "migration:table:run:sql": "docker exec -i postgres-auth psql -U postgres -d table_db < docker/migrate-table-number-to-string.sql"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",

@@ -45,6 +45,8 @@ Client → API Gateway → Microservices
 | ---------------- | --------------------------------------------------------- | ---- | --------- | -------- |
 | **API Gateway**  | Entry point, routing, authentication proxy, Socket.IO hub | 3000 | N/A       | ✅ Ready |
 | **Auth Service** | User management, authentication, JWT token issuance       | 3001 | `auth_db` | ✅ Ready |
+| **Table Service** | Table management, QR code generation, table status       | 3002 | `table_db` | ✅ Ready |
+| **Table Service** | Table management, QR code generation, table status       | 3002 | `table_db` | ✅ Ready |
 
 ---
 
@@ -413,6 +415,9 @@ pnpm run start:dev:gateway
 
 # Terminal 3: Start Auth Service
 pnpm run start:dev:auth
+
+# Terminal 4: Start Table Service
+pnpm run start:dev:table
 ```
 
 ### Verify Services
@@ -424,8 +429,14 @@ curl http://localhost:3000/api/v1/auth/register
 # Check Auth Service directly
 curl http://localhost:3001/auth/register
 
-# Check PostgreSQL
+# Check Table Service directly
+curl http://localhost:3002/api/v1/tables
+
+# Check PostgreSQL (auth_db)
 docker exec -it postgres-auth psql -U postgres -d auth_db
+
+# Check PostgreSQL (table_db)
+docker exec -it postgres-auth psql -U postgres -d table_db
 
 # Check Redis
 docker exec -it redis redis-cli ping
@@ -893,10 +904,17 @@ restaurant-microservices/
 │   │   │   ├── gateway/      # Gateway controllers, services, Socket.IO
 │   │   │   └── main.ts
 │   │   └── Dockerfile
-│   └── auth-service/         # Authentication Service
+│   ├── auth-service/         # Authentication Service
+│   │   ├── src/
+│   │   │   ├── auth/         # Auth module (controllers, services, entities)
+│   │   │   ├── config/       # Database, Redis configs
+│   │   │   └── main.ts
+│   │   └── Dockerfile
+│   └── table-service/        # Table Management Service
 │       ├── src/
-│       │   ├── auth/         # Auth module (controllers, services, entities)
-│       │   ├── config/       # Database, Redis configs
+│       │   ├── entities/     # Table and TableQR entities
+│       │   ├── dto/          # DTOs for table operations
+│       │   ├── config/       # Redis config
 │       │   └── main.ts
 │       └── Dockerfile
 ├── libs/                     # Shared libraries
@@ -911,11 +929,17 @@ restaurant-microservices/
 # Development
 pnpm run start:dev:gateway    # Start API Gateway in watch mode
 pnpm run start:dev:auth       # Start Auth Service in watch mode
+pnpm run start:dev:table      # Start Table Service in watch mode
 
 # Docker
 pnpm run docker:up            # Start all services
 pnpm run docker:down          # Stop all services
-pnpm run docker:logs          # View logs
+pnpm run docker:logs          # View all logs
+pnpm run docker:logs:gateway  # View API Gateway logs
+pnpm run docker:logs:auth     # View Auth Service logs
+pnpm run docker:logs:table    # View Table Service logs
+pnpm run docker:logs:postgres # View PostgreSQL logs
+pnpm run docker:logs:redis    # View Redis logs
 
 # Code Quality
 pnpm run format               # Format code with Prettier

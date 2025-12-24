@@ -1,16 +1,17 @@
 services:
-  # PostgreSQL Database for Auth Service
+  # PostgreSQL Database for Auth Service and Table Service
   postgres-auth:
     image: postgres:16-alpine
     container_name: postgres-auth
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: Bapbap1412
       POSTGRES_DB: auth_db
     ports:
       - '5433:5432'  # Map host port 5433 to container port 5432 (to avoid conflict with local PostgreSQL)
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
+      - ./docker/init-table-db.sql:/docker-entrypoint-initdb.d/init-table-db.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
@@ -47,7 +48,7 @@ services:
       DB_HOST: postgres-auth
       DB_PORT: 5432
       DB_USER: postgres
-      DB_PASS: postgres
+      DB_PASS: Bapbap1412
       DB_NAME: auth_db
       DB_LOGGING: 'true'
       JWT_SECRET: supersecret
@@ -71,6 +72,40 @@ services:
       - ./nest-cli.json:/app/nest-cli.json
     command: pnpm run start:dev auth-service
 
+  # Table Service
+  table-service:
+    build:
+      context: .
+      dockerfile: apps/table-service/Dockerfile
+    container_name: table-service
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DB_HOST: postgres-auth
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: Bapbap1412
+      TABLE_DB_NAME: table_db
+      DB_LOGGING: 'true'
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - '3002:3002'
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+    volumes:
+      - ./apps/table-service:/app/apps/table-service
+      - ./libs:/app/libs
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./nest-cli.json:/app/nest-cli.json
+    command: pnpm run start:dev table-service
+
   # API Gateway
   api-gateway:
     build:
@@ -81,10 +116,12 @@ services:
       NODE_ENV: development
       PORT: 3000
       AUTH_SERVICE_URL: http://auth-service:3001
+      TABLE_SERVICE_URL: http://table-service:3002
     ports:
       - '3000:3000'
     depends_on:
       - auth-service
+      - table-service
       - redis
     networks:
       - restaurant-network

@@ -22,6 +22,7 @@ export interface ProxyRequestParams {
 @Injectable()
 export class GatewayService {
   private readonly authServiceUrl: string;
+  private readonly tableServiceUrl: string;
 
   constructor(
     private readonly httpService: HttpService,
@@ -31,8 +32,15 @@ export class GatewayService {
       'AUTH_SERVICE_URL',
       'http://localhost:3001',
     );
+    this.tableServiceUrl = this.configService.get<string>(
+      'TABLE_SERVICE_URL',
+      'http://localhost:3002',
+    );
     console.log(
       `[GatewayService] Initialized with AUTH_SERVICE_URL: ${this.authServiceUrl}`,
+    );
+    console.log(
+      `[GatewayService] Initialized with TABLE_SERVICE_URL: ${this.tableServiceUrl}`,
     );
   }
 
@@ -50,6 +58,9 @@ export class GatewayService {
     switch (service) {
       case 'auth':
         serviceUrl = this.authServiceUrl;
+        break;
+      case 'tables':
+        serviceUrl = this.tableServiceUrl;
         break;
       // Add more services as they are created
       // case 'order':
