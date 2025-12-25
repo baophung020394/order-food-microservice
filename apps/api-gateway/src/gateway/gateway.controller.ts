@@ -77,8 +77,26 @@ export class GatewayController {
     }
   }
 
+  @All('tables')
+  async proxyTablesExact(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    return this.proxyTables(req, res);
+  }
+
   @All('tables/*')
-  async proxyTables(@Req() req: Request, @Res() res: Response): Promise<void> {
+  async proxyTablesWildcard(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    return this.proxyTables(req, res);
+  }
+
+  private async proxyTables(
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
     try {
       // Extract path: req.path will be /api/v1/tables/... (with global prefix)
       // We need to convert it to /api/v1/tables/... for the table service
