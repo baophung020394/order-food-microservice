@@ -12,6 +12,8 @@ services:
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
       - ./docker/init-table-db.sql:/docker-entrypoint-initdb.d/init-table-db.sql
+      - ./docker/init-order-db.sql:/docker-entrypoint-initdb.d/init-order-db.sql
+      - ./docker/init-food-db.sql:/docker-entrypoint-initdb.d/init-food-db.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
@@ -106,6 +108,74 @@ services:
       - ./nest-cli.json:/app/nest-cli.json
     command: pnpm run start:dev table-service
 
+  # Order Service
+  order-service:
+    build:
+      context: .
+      dockerfile: apps/order-service/Dockerfile
+    container_name: order-service
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DB_HOST: postgres-auth
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: Bapbap1412
+      ORDER_DB_NAME: order_db
+      DB_LOGGING: 'true'
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - '3003:3003'
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+    volumes:
+      - ./apps/order-service:/app/apps/order-service
+      - ./libs:/app/libs
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./nest-cli.json:/app/nest-cli.json
+    command: pnpm run start:dev order-service
+
+  # Food Service
+  food-service:
+    build:
+      context: .
+      dockerfile: apps/food-service/Dockerfile
+    container_name: food-service
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      DB_HOST: postgres-auth
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: Bapbap1412
+      FOOD_DB_NAME: food_db
+      DB_LOGGING: 'true'
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - '3004:3004'
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - restaurant-network
+    volumes:
+      - ./apps/food-service:/app/apps/food-service
+      - ./libs:/app/libs
+      - ./package.json:/app/package.json
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./nest-cli.json:/app/nest-cli.json
+    command: pnpm run start:dev food-service
+
   # API Gateway
   api-gateway:
     build:
@@ -117,11 +187,15 @@ services:
       PORT: 3000
       AUTH_SERVICE_URL: http://auth-service:3001
       TABLE_SERVICE_URL: http://table-service:3002
+      ORDER_SERVICE_URL: http://order-service:3003
+      FOOD_SERVICE_URL: http://food-service:3004
     ports:
       - '3000:3000'
     depends_on:
       - auth-service
       - table-service
+      - order-service
+      - food-service
       - redis
     networks:
       - restaurant-network

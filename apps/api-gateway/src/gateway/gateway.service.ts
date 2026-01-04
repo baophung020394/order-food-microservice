@@ -23,6 +23,8 @@ export interface ProxyRequestParams {
 export class GatewayService {
   private readonly authServiceUrl: string;
   private readonly tableServiceUrl: string;
+  private readonly orderServiceUrl: string;
+  private readonly foodServiceUrl: string;
 
   constructor(
     private readonly httpService: HttpService,
@@ -36,11 +38,25 @@ export class GatewayService {
       'TABLE_SERVICE_URL',
       'http://localhost:3002',
     );
+    this.orderServiceUrl = this.configService.get<string>(
+      'ORDER_SERVICE_URL',
+      'http://localhost:3003',
+    );
+    this.foodServiceUrl = this.configService.get<string>(
+      'FOOD_SERVICE_URL',
+      'http://localhost:3004',
+    );
     console.log(
       `[GatewayService] Initialized with AUTH_SERVICE_URL: ${this.authServiceUrl}`,
     );
     console.log(
       `[GatewayService] Initialized with TABLE_SERVICE_URL: ${this.tableServiceUrl}`,
+    );
+    console.log(
+      `[GatewayService] Initialized with ORDER_SERVICE_URL: ${this.orderServiceUrl}`,
+    );
+    console.log(
+      `[GatewayService] Initialized with FOOD_SERVICE_URL: ${this.foodServiceUrl}`,
     );
   }
 
@@ -62,10 +78,13 @@ export class GatewayService {
       case 'tables':
         serviceUrl = this.tableServiceUrl;
         break;
+      case 'orders':
+        serviceUrl = this.orderServiceUrl;
+        break;
+      case 'food':
+        serviceUrl = this.foodServiceUrl;
+        break;
       // Add more services as they are created
-      // case 'order':
-      //   serviceUrl = this.orderServiceUrl;
-      //   break;
       default:
         throw new HttpException(
           `Service ${service} not found`,

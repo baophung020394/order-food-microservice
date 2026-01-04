@@ -41,12 +41,13 @@ Client → API Gateway → Microservices
 
 ## 📦 Services Overview
 
-| Service          | Purpose                                                   | Port | Database  | Status   |
-| ---------------- | --------------------------------------------------------- | ---- | --------- | -------- |
-| **API Gateway**  | Entry point, routing, authentication proxy, Socket.IO hub | 3000 | N/A       | ✅ Ready |
-| **Auth Service** | User management, authentication, JWT token issuance       | 3001 | `auth_db` | ✅ Ready |
-| **Table Service** | Table management, QR code generation, table status       | 3002 | `table_db` | ✅ Ready |
-| **Table Service** | Table management, QR code generation, table status       | 3002 | `table_db` | ✅ Ready |
+| Service           | Purpose                                                   | Port | Database   | Status   |
+| ----------------- | --------------------------------------------------------- | ---- | ---------- | -------- |
+| **API Gateway**   | Entry point, routing, authentication proxy, Socket.IO hub | 3000 | N/A        | ✅ Ready |
+| **Auth Service**  | User management, authentication, JWT token issuance       | 3001 | `auth_db`  | ✅ Ready |
+| **Table Service** | Table management, QR code generation, table status        | 3002 | `table_db` | ✅ Ready |
+| **Order Service** | Order management, order items, order status tracking      | 3003 | `order_db` | ✅ Ready |
+| **Food Service**  | Menu management, dishes, categories, availability         | 3004 | `food_db`  | ✅ Ready |
 
 ---
 
@@ -161,9 +162,9 @@ JWT_SECRET=supersecret
 # ============================================
 GATEWAY_PORT=3000
 AUTH_SERVICE_URL=http://localhost:3001
-ORDER_SERVICE_URL=http://localhost:3002
-MENU_SERVICE_URL=http://localhost:3003
-TABLE_SERVICE_URL=http://localhost:3004
+TABLE_SERVICE_URL=http://localhost:3002
+ORDER_SERVICE_URL=http://localhost:3003
+MENU_SERVICE_URL=http://localhost:3004
 KITCHEN_SERVICE_URL=http://localhost:3005
 BILLING_SERVICE_URL=http://localhost:3006
 
@@ -230,18 +231,19 @@ Cả 2 services đều đọc từ **ROOT `.env`** theo thứ tự ưu tiên:
 4. **Default values** trong code (thấp nhất)
 
 **Code configuration:**
+
 ```typescript
 // apps/auth-service/src/app.module.ts
 ConfigModule.forRoot({
   isGlobal: true,
   envFilePath: ['.env', '.env.local'], // Đọc từ ROOT
-})
+});
 
-// apps/api-gateway/src/api-gateway.module.ts  
+// apps/api-gateway/src/api-gateway.module.ts
 ConfigModule.forRoot({
   isGlobal: true,
   envFilePath: ['.env', '.env.local'], // Đọc từ ROOT
-})
+});
 ```
 
 #### 🐳 **Docker Compose**
@@ -261,9 +263,8 @@ auth-service:
 ```yaml
 auth-service:
   env_file:
-    - .env  # Load từ root .env
+    - .env # Load từ root .env
 ```
-
 
 #### 🎯 **Với nhiều Services (8+ services) - Vẫn chỉ cần 1 file `.env` ở ROOT**
 
@@ -340,9 +341,11 @@ TypeOrmModule.forRootAsync({
     host: config.get<string>('AUTH_DB_HOST', 'localhost'),
     database: config.get<string>('AUTH_DB_NAME', 'auth_db'),
     // Hoặc fallback về DB_HOST nếu không có prefix (backward compatible)
-    host: config.get<string>('AUTH_DB_HOST') || config.get<string>('DB_HOST', 'localhost'),
+    host:
+      config.get<string>('AUTH_DB_HOST') ||
+      config.get<string>('DB_HOST', 'localhost'),
   }),
-})
+});
 
 // apps/order-service/src/app.module.ts (future)
 TypeOrmModule.forRootAsync({
@@ -350,19 +353,19 @@ TypeOrmModule.forRootAsync({
     host: config.get<string>('ORDER_DB_HOST', 'localhost'),
     database: config.get<string>('ORDER_DB_NAME', 'order_db'),
   }),
-})
+});
 ```
 
 #### 📝 **Tóm tắt nhanh**
 
-| Câu hỏi | Trả lời |
-|---------|---------|
-| **Tạo `.env` ở đâu?** | ✅ **Ở ROOT của project** (cùng cấp với `package.json`) |
-| **Có cần `.env` trong từng service không?** | ❌ **KHÔNG cần** - Tất cả đọc từ root `.env` |
-| **Với nhiều services thì sao?** | ✅ **Vẫn chỉ 1 file `.env` ở root**, dùng **SERVICE_PREFIX** (ví dụ: `AUTH_DB_HOST`, `ORDER_DB_HOST`) |
-| **File nào cần tạo?** | ✅ Chỉ cần `.env` ở root (copy từ `.env.example`) |
-| **Docker có cần `.env` không?** | ⚠️ **Không bắt buộc** - Docker Compose set env vars trực tiếp |
-| **Nội dung `.env` như thế nào?** | ✅ Xem file `.env.example` ở root |
+| Câu hỏi                                     | Trả lời                                                                                               |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **Tạo `.env` ở đâu?**                       | ✅ **Ở ROOT của project** (cùng cấp với `package.json`)                                               |
+| **Có cần `.env` trong từng service không?** | ❌ **KHÔNG cần** - Tất cả đọc từ root `.env`                                                          |
+| **Với nhiều services thì sao?**             | ✅ **Vẫn chỉ 1 file `.env` ở root**, dùng **SERVICE_PREFIX** (ví dụ: `AUTH_DB_HOST`, `ORDER_DB_HOST`) |
+| **File nào cần tạo?**                       | ✅ Chỉ cần `.env` ở root (copy từ `.env.example`)                                                     |
+| **Docker có cần `.env` không?**             | ⚠️ **Không bắt buộc** - Docker Compose set env vars trực tiếp                                         |
+| **Nội dung `.env` như thế nào?**            | ✅ Xem file `.env.example` ở root                                                                     |
 
 #### 📝 Best Practices
 
@@ -384,6 +387,7 @@ TypeOrmModule.forRootAsync({
 - **Mỗi service** đọc config của mình từ cùng 1 file `.env` ở root
 
 **Ví dụ:**
+
 - 2 services → 1 file `.env` ở root ✅
 - 8 services → Vẫn chỉ 1 file `.env` ở root ✅
 - 20 services → Vẫn chỉ 1 file `.env` ở root ✅
@@ -535,10 +539,15 @@ AuthController
 
 ## 📡 API Documentation
 
+> 📚 **Xem tài liệu đầy đủ:** [API Endpoints Documentation](./docs/api-endpoints.md)
+
 ### Base URLs
 
 - **API Gateway:** `http://localhost:3000/api/v1`
 - **Auth Service (Direct):** `http://localhost:3001`
+- **Table Service (Direct):** `http://localhost:3002/api/v1`
+- **Order Service (Direct):** `http://localhost:3003/api/v1`
+- **Food Service (Direct):** `http://localhost:3004/api/v1`
 
 ### Authentication Endpoints
 
@@ -725,7 +734,8 @@ Authorization: Bearer <access_token>
 }
 ```
 
-**Note:** 
+**Note:**
+
 - If `refreshToken` is provided, only that specific token will be invalidated (logout from one device)
 - If `refreshToken` is not provided, all refresh tokens for the user will be invalidated (logout from all devices)
 
@@ -917,6 +927,13 @@ restaurant-microservices/
 │       │   ├── config/       # Redis config
 │       │   └── main.ts
 │       └── Dockerfile
+│   └── order-service/        # Order Management Service
+│       ├── src/
+│       │   ├── entities/     # Order and OrderItem entities
+│       │   ├── dto/          # DTOs for order operations
+│       │   ├── config/       # Redis config
+│       │   └── main.ts
+│       └── Dockerfile
 ├── libs/                     # Shared libraries
 ├── docs/                     # Documentation
 ├── docker-compose.yml        # Docker services configuration
@@ -930,6 +947,8 @@ restaurant-microservices/
 pnpm run start:dev:gateway    # Start API Gateway in watch mode
 pnpm run start:dev:auth       # Start Auth Service in watch mode
 pnpm run start:dev:table      # Start Table Service in watch mode
+pnpm run start:dev:order      # Start Order Service in watch mode
+pnpm run start:dev:food       # Start Food Service in watch mode
 
 # Docker
 pnpm run docker:up            # Start all services
@@ -938,6 +957,8 @@ pnpm run docker:logs          # View all logs
 pnpm run docker:logs:gateway  # View API Gateway logs
 pnpm run docker:logs:auth     # View Auth Service logs
 pnpm run docker:logs:table    # View Table Service logs
+pnpm run docker:logs:order    # View Order Service logs
+pnpm run docker:logs:food     # View Food Service logs
 pnpm run docker:logs:postgres # View PostgreSQL logs
 pnpm run docker:logs:redis    # View Redis logs
 
@@ -1065,6 +1086,7 @@ curl -X GET http://localhost:3000/api/v1/auth/profile \
 
 ## 📚 Additional Documentation
 
+- **[API Endpoints Documentation](./docs/api-endpoints.md)** - Tổng hợp đầy đủ các API endpoints của Food Service và Order Service
 - [Project Brief](./docs/project_brief.md) - Detailed project overview and architecture
 - [Microservices Setup](./docs/project_microservices_setup.md) - Setup guide and next steps
 
@@ -1095,6 +1117,7 @@ Nếu bạn đã có PostgreSQL local chạy trên port `5432`, Docker Compose s
 - **Host machine:** PostgreSQL accessible qua port `5433` (từ máy local)
 
 **Kết nối từ máy local (DBeaver, psql, etc.):**
+
 ```bash
 # Sử dụng port 5433 thay vì 5432
 psql -h localhost -p 5433 -U postgres -d auth_db
@@ -1140,6 +1163,50 @@ docker exec -it redis redis-cli ping
 - Check if `JWT_SECRET` matches between services
 - Verify token hasn't expired
 - Ensure `Authorization: Bearer <token>` header format is correct
+
+**5. Database does not exist (order_db, food_db, table_db)**
+
+**Nguyên nhân:** PostgreSQL chỉ chạy các script init (`/docker-entrypoint-initdb.d/*.sql`) khi database được khởi tạo lần đầu. Nếu volume `postgres-auth-data` đã tồn tại từ trước (khi chỉ có `auth_db`), các script init sẽ không chạy lại.
+
+**Giải pháp:**
+
+**Cách 1: Tạo databases thủ công (Khuyến nghị - không mất dữ liệu)**
+
+```bash
+# Chạy script tự động
+pnpm run docker:create-databases
+
+# Hoặc tạo thủ công từng database
+docker exec postgres-auth psql -U postgres -c "CREATE DATABASE order_db;"
+docker exec postgres-auth psql -U postgres -c "CREATE DATABASE food_db;"
+docker exec postgres-auth psql -U postgres -c "CREATE DATABASE table_db;"
+
+# Grant privileges
+docker exec postgres-auth psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE order_db TO postgres;"
+docker exec postgres-auth psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE food_db TO postgres;"
+docker exec postgres-auth psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE table_db TO postgres;"
+```
+
+**Cách 2: Xóa volume và recreate (⚠️ Mất dữ liệu)**
+
+```bash
+# Dừng tất cả containers
+docker-compose down
+
+# Xóa volume PostgreSQL (⚠️ Mất tất cả dữ liệu)
+docker volume rm restaurant-microservices_postgres-auth-data
+
+# Khởi động lại - databases sẽ được tạo tự động
+docker-compose up -d
+```
+
+**Kiểm tra databases đã được tạo:**
+
+```bash
+docker exec postgres-auth psql -U postgres -c "\l"
+```
+
+Bạn sẽ thấy danh sách databases: `auth_db`, `table_db`, `order_db`, `food_db`.
 
 ---
 

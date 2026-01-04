@@ -46,6 +46,24 @@
         "tsConfigPath": "libs/database/tsconfig.lib.json"
       }
     },
+    "food-service": {
+      "type": "application",
+      "root": "apps/food-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/food-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/food-service/tsconfig.app.json"
+      }
+    },
+    "order-service": {
+      "type": "application",
+      "root": "apps/order-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/order-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/order-service/tsconfig.app.json"
+      }
+    },
     "table-service": {
       "type": "application",
       "root": "apps/table-service",

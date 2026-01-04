@@ -1,19 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { TableServiceModule } from './table-service.module';
+import { FoodServiceModule } from './food-service.module';
 
 async function bootstrap() {
   // Log environment variables for debugging
-  console.log('[TableService] Environment variables check:');
-  console.log('[TableService] DB_HOST:', process.env.DB_HOST || 'NOT SET');
-  console.log('[TableService] DB_PORT:', process.env.DB_PORT || 'NOT SET');
+  console.log('[FoodService] Environment variables check:');
+  console.log('[FoodService] DB_HOST:', process.env.DB_HOST || 'NOT SET');
+  console.log('[FoodService] DB_PORT:', process.env.DB_PORT || 'NOT SET');
   console.log(
-    '[TableService] TABLE_DB_NAME:',
-    process.env.TABLE_DB_NAME || 'NOT SET',
+    '[FoodService] FOOD_DB_NAME:',
+    process.env.FOOD_DB_NAME || 'NOT SET',
   );
-  console.log('[TableService] PORT:', process.env.PORT || 'NOT SET');
+  console.log('[FoodService] PORT:', process.env.PORT || 'NOT SET');
 
-  const app = await NestFactory.create(TableServiceModule, {
+  const app = await NestFactory.create(FoodServiceModule, {
     bodyParser: true,
     rawBody: false,
   });
@@ -40,8 +40,8 @@ async function bootstrap() {
   // Set global prefix
   app.setGlobalPrefix('api/v1');
 
-  const port = process.env.PORT || 3002;
+  const port = process.env.PORT || 3004;
   await app.listen(port);
-  console.log(`🍽️  Table Service is running on: http://localhost:${port}`);
+  console.log(`🍜 Food Service is running on: http://localhost:${port}`);
 }
 void bootstrap();
