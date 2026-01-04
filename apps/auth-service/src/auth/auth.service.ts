@@ -32,23 +32,29 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   }> {
+    console.log('[AuthService] Starting register process...');
     const { username, password, fullName, role } = registerDto;
 
     // Check if user already exists
+    console.log('[AuthService] Checking if user exists:', username);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const existingUser: User | null = await this.userRepository.findOne({
       where: { username },
     });
+    console.log('[AuthService] User exists check completed');
 
     if (existingUser) {
       throw new ConflictException('Username already exists');
     }
 
     // Hash password
+    console.log('[AuthService] Hashing password...');
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const passwordHash = await bcrypt.hash(password, 10);
+    console.log('[AuthService] Password hashed');
 
     // Create user
+    console.log('[AuthService] Creating user entity...');
     const user = this.userRepository.create({
       username,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -58,12 +64,17 @@ export class AuthService {
       isActive: true,
     });
 
+    console.log('[AuthService] Saving user to database...');
     const savedUser = await this.userRepository.save(user);
+    console.log('[AuthService] User saved successfully:', savedUser.id);
 
     // Generate tokens
+    console.log('[AuthService] Generating tokens...');
     const tokens = await this.generateTokens(savedUser);
+    console.log('[AuthService] Tokens generated');
 
     // Emit user.created event to Redis
+    console.log('[AuthService] Publishing user.created event to Redis...');
     await this.redis.publish(
       'user.created',
       JSON.stringify({
@@ -72,6 +83,7 @@ export class AuthService {
         role: savedUser.role,
       }),
     );
+    console.log('[AuthService] Event published to Redis');
 
     // Remove password hash from response
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -190,6 +202,44 @@ export class AuthService {
     );
   }
 
+  async logout(
+    userId: string,
+    refreshToken?: string,
+  ): Promise<{ message: string }> {
+    // If refreshToken is provided, logout only that specific token
+    // Otherwise, logout all refresh tokens for the user (logout from all devices)
+    if (refreshToken) {
+      const token = await this.refreshTokenRepository.findOne({
+        where: {
+          userId,
+          token: refreshToken,
+        },
+      });
+
+      if (token) {
+        await this.refreshTokenRepository.remove(token);
+        console.log(
+          `[AuthService] Logged out refresh token for user: ${userId}`,
+        );
+        return { message: 'Logged out successfully' };
+      }
+    } else {
+      // Delete all refresh tokens for the user
+      const tokens = await this.refreshTokenRepository.find({
+        where: { userId },
+      });
+
+      if (tokens.length > 0) {
+        await this.refreshTokenRepository.remove(tokens);
+        console.log(
+          `[AuthService] Logged out all devices for user: ${userId} (${tokens.length} tokens removed)`,
+        );
+      }
+    }
+
+    return { message: 'Logged out successfully' };
+  }
+
   private async generateTokens(
     user: User,
   ): Promise<{ accessToken: string; refreshToken: string }> {
@@ -207,7 +257,7 @@ export class AuthService {
       type: 'refresh',
     };
     const refreshToken = this.jwtService.sign(refreshTokenPayload, {
-      expiresIn: '7d',
+      expiresIn: '30s',
     });
 
     // Save refresh token to database
